@@ -40,12 +40,13 @@ public class LexicalAnalysis implements AutoCloseable {
          
          for(;;readch()) {
         	 if(ch == ' ' || ch == '\t' || ch == '\r') continue;
-        	 if(ch == '\n') line++;
-        	 else break;
+        	 else if(ch == '\n') line++;
+        	 else if(ch == '{') {
+            	 while(ch != '}')readch();
+            	 readch();
+             }else break;
          }
-         if(ch == '{') {
-        	 while(ch != '}')readch();
-         }
+         
          if(ch == -1) return lex;
          switch(ch) {
          	case ';':
@@ -57,6 +58,16 @@ public class LexicalAnalysis implements AutoCloseable {
          		ch = ' ';
          		lex.token = ",";
          		lex.type= Tag.COLON;
+         		break;
+         	case '(':
+         		ch = ' ';
+         		lex.token="(";
+         		lex.type=Tag.OPEN_PAR;
+         		break;
+         	case ')':
+         		ch = ' ';
+         		lex.token = ")";
+         		lex.type= Tag.CLOSE_PAR;
          		break;
          	case '+':
          		ch = ' ';
@@ -121,14 +132,19 @@ public class LexicalAnalysis implements AutoCloseable {
         	 readch();
         	 lex.type = Tag.STRING_C;
         	 while(ch != '"') {
+        		 if(ch == -1) {
+        			 lex.type = Tag.UNEXPECTED_EOF;
+        		 }
         		 if(ch == '\n') {
+        			 
         			 lex.type = Tag.INVALID_TOKEN;
         			 break;
         		 }else {
         			 lex.token+= ch;
         		 }
+        		 readch();
         	 }
-        	 readch();
+        	ch = ' ';
          }
          if(lex.token != "") return lex;
          
@@ -148,12 +164,17 @@ public class LexicalAnalysis implements AutoCloseable {
         			 while(Character.isDigit(ch)) {
         				 lex.token +=ch;
             			 readch();
+            			 
         			 }
         		 }else {
+        			 lex.token+=ch;
         			 lex.type = Tag.INVALID_TOKEN;
         		 }
         	 }
-        	 if(Character.isLetter(ch))lex.type = Tag.INVALID_TOKEN;
+        	 if(Character.isLetter(ch)) {
+        		 lex.token+=ch;
+        		 lex.type = Tag.INVALID_TOKEN;
+        	 }
          }
          if(lex.token != "") return lex;
          
@@ -170,8 +191,10 @@ public class LexicalAnalysis implements AutoCloseable {
         		 st.insert(lex.token);
         	 }
          }
-         if(lex.token == "")
+         if(lex.token == "") {
+        	 lex.token+=ch;
         	 lex.type = Tag.INVALID_TOKEN;
+         }
          return lex;
     }
 }
