@@ -30,6 +30,7 @@ public class main {
 				System.out.printf("(\"%s\", %s)\n", lex.token, lex.type);
 				break;
 			}
+			l.printTable();
 		} catch (Exception e) {
 			System.err.println("Internal error: " + e.getMessage());
 		}

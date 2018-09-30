@@ -1,6 +1,7 @@
 package Lexical;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.HashMap;
 
 class SymbolTable {
@@ -41,5 +42,14 @@ class SymbolTable {
     public Tag find(String token) {
         return this.contains(token) ?
             st.get(token) : Tag.INVALID_TOKEN;
+    }
+    
+    public String toString() {
+    	String s = "Token=>Tag\n__________________________________\n";
+    	Set<String> tokens = st.keySet();
+    	for(String token : tokens) {
+    		s+=token+"=>"+st.get(token)+"\n";
+    	}
+    	return s;
     }
 }

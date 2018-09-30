@@ -205,4 +205,8 @@ public class LexicalAnalysis implements AutoCloseable {
          }
          return lex;
     }
+    
+    public void printTable() {
+    	System.out.println(st);
+    }
 }
