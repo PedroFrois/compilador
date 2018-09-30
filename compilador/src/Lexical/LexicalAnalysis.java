@@ -42,7 +42,13 @@ public class LexicalAnalysis implements AutoCloseable {
         	 if(ch == ' ' || ch == '\t' || ch == '\r') continue;
         	 else if(ch == '\n') line++;
         	 else if(ch == '{') {
-            	 while(ch != '}')readch();
+            	 while(ch != '}') {
+            		 readch();
+            		 if(ch == 65535) {
+                		 lex.type= Tag.UNEXPECTED_EOF;
+                		 return lex;
+                	 }
+            	 }
             	 readch();
              }else break;
          }
@@ -128,12 +134,16 @@ public class LexicalAnalysis implements AutoCloseable {
          		break;
          }
          if(lex.token != "") return lex;
-         if(ch == '"') {
+         if(ch == '“') {
         	 readch();
         	 lex.type = Tag.STRING_C;
-        	 while(ch != '"') {
+        	 while(ch != '”') {
         		 if(ch == 65535) {
         			 lex.type = Tag.UNEXPECTED_EOF;
+        			 break;
+        		 }
+        		 if(ch == '“') {
+        			 lex.type = Tag.INVALID_TOKEN;
         		 }
         		 if(ch == '\n') {
         			 
@@ -146,6 +156,7 @@ public class LexicalAnalysis implements AutoCloseable {
         	 }
         	ch = ' ';
          }
+         
          if(lex.token != "") return lex;
          
          if(Character.isDigit(ch)) {

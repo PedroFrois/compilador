@@ -10,11 +10,6 @@ class SymbolTable {
     public SymbolTable() {
         st = new HashMap<String, Tag>();
         
-        // symbols
-        st.put(";", Tag.SEMICOLON);
-        st.put(",", Tag.COLON);
-        st.put("{", Tag.OPEN_PAR);
-        st.put("}", Tag.CLOSE_PAR);
         // keywords
         st.put("start", Tag.START);
         st.put("exit", Tag.EXIT);
@@ -29,19 +24,6 @@ class SymbolTable {
         st.put("int", Tag.INT_T);
         st.put("float", Tag.FLOAT_T);
         st.put("string", Tag.STRING_T);
-        // operators
-
-        st.put("=", Tag.ASSIGN);
-        st.put("+", Tag.PLUS);
-        st.put("-", Tag.MINUS);
-        st.put("*", Tag.MULT);
-        st.put("/", Tag.DIV);
-        st.put("==", Tag.EQUAL);
-        st.put(">", Tag.GREATER);
-        st.put(">=", Tag.GREATER_EQUAL);
-        st.put("<", Tag.LESSER);
-        st.put("<=", Tag.LESSER_EQUAL);
-        st.put("<>", Tag.DIFF);
     }
 
     public boolean insert(String token) {
