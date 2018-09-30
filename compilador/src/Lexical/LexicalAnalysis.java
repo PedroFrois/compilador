@@ -134,16 +134,13 @@ public class LexicalAnalysis implements AutoCloseable {
          		break;
          }
          if(lex.token != "") return lex;
-         if(ch == '“') {
+         if(ch == '"') {
         	 readch();
         	 lex.type = Tag.STRING_C;
-        	 while(ch != '”') {
+        	 while(ch != '"') {
         		 if(ch == 65535) {
         			 lex.type = Tag.UNEXPECTED_EOF;
         			 break;
-        		 }
-        		 if(ch == '“') {
-        			 lex.type = Tag.INVALID_TOKEN;
         		 }
         		 if(ch == '\n') {
         			 
