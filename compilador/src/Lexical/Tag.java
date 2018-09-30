@@ -39,8 +39,8 @@ public enum Tag {
     EQUAL,
     GREATER,
     GREATER_EQUAL,
-    LESS,
-    LESS_EQUAL,
+    LESSER,
+    LESSER_EQUAL,
     DIFF,
     //logical
     NOT,

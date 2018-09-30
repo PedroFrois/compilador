@@ -39,8 +39,8 @@ class SymbolTable {
         st.put("==", Tag.EQUAL);
         st.put(">", Tag.GREATER);
         st.put(">=", Tag.GREATER_EQUAL);
-        st.put("<", Tag.LESS);
-        st.put("<=", Tag.LESS_EQUAL);
+        st.put("<", Tag.LESSER);
+        st.put("<=", Tag.LESSER_EQUAL);
         st.put("<>", Tag.DIFF);
     }
 

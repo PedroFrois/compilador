@@ -47,7 +47,7 @@ public class LexicalAnalysis implements AutoCloseable {
              }else break;
          }
          
-         if(ch == -1) return lex;
+         if(ch == 65535) return lex;
          switch(ch) {
          	case ';':
          		ch = ' ';
@@ -90,8 +90,8 @@ public class LexicalAnalysis implements AutoCloseable {
          		lex.type= Tag.DIV;
          		break;
          	case '=':
-         		readch();
          		lex.token+=ch;
+         		readch();
          		if(ch == '=') {
              		lex.token+=ch;
              		ch = ' ';
@@ -117,13 +117,13 @@ public class LexicalAnalysis implements AutoCloseable {
          		if(ch == '=') {
          			lex.token+=ch;
          			ch = ' ';
-         			lex.type = Tag.LESS_EQUAL;
+         			lex.type = Tag.LESSER_EQUAL;
          		}else if(ch == '>'){
          			lex.token+=ch;
          			ch = ' ';
          			lex.type = Tag.DIFF;
          		}else {
-         			lex.type = Tag.LESS;
+         			lex.type = Tag.LESSER;
          		}
          		break;
          }
@@ -132,7 +132,7 @@ public class LexicalAnalysis implements AutoCloseable {
         	 readch();
         	 lex.type = Tag.STRING_C;
         	 while(ch != '"') {
-        		 if(ch == -1) {
+        		 if(ch == 65535) {
         			 lex.type = Tag.UNEXPECTED_EOF;
         		 }
         		 if(ch == '\n') {
@@ -179,7 +179,7 @@ public class LexicalAnalysis implements AutoCloseable {
          if(lex.token != "") return lex;
          
          if(Character.isLetter(ch)) {
-        	 lex.token+=ch;
+        	 //lex.token+=ch;
         	 lex.type = Tag.IDENTIFIER;
         	 while(Character.isLetter(ch) || Character.isDigit(ch)) {
 				 lex.token +=ch;
