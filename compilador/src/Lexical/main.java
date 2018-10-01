@@ -10,24 +10,24 @@ public class main {
 		}
 
 		try (LexicalAnalysis l = new LexicalAnalysis(args[0])) {
-
+			int i = 0;
 			// O codigo a seguir eh usado apenas para testar o analisador lexico.
 			// TODO: depois de pronto, comentar o codigo abaixo.
 			Lexeme lex = l.nextToken();
 			while (checkType(lex.type)) {
-				System.out.printf("(\"%s\", %s)\n", lex.token, lex.type);
+				System.out.printf("%02d_(\"%s\", %s)\n", i++, lex.token, lex.type);
 				lex = l.nextToken();
 			}
 
 			switch (lex.type) {
 			case INVALID_TOKEN:
-				System.out.printf("%02d: Lexema invalido [%s]\n", l.getLine(), lex.token);
+				System.out.printf("%02d_%02d: Lexema invalido [%s]\n", i++, l.getLine(), lex.token);
 				break;
 			case UNEXPECTED_EOF:
-				System.out.printf("%02d: Fim de arquivo inesperado\n", l.getLine());
+				System.out.printf("%02d_%02d: Fim de arquivo inesperado\n", i++, l.getLine());
 				break;
 			default:
-				System.out.printf("(\"%s\", %s)\n", lex.token, lex.type);
+				System.out.printf("%02d_(\"%s\", %s)\n", i++, lex.token, lex.type);
 				break;
 			}
 			l.printTable();

@@ -45,7 +45,7 @@ class SymbolTable {
     }
     
     public String toString() {
-    	String s = "Token=>Tag\n__________________________________\n";
+    	String s = "\nToken=>Tag\n__________________________________\n";
     	Set<String> tokens = st.keySet();
     	for(String token : tokens) {
     		s+=token+"=>"+st.get(token)+"\n";
