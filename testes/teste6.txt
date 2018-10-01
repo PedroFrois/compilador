@@ -1,0 +1,27 @@
+start
+  int i,0a=0,float soma.Par=0,soma.Impar=0;
+  scan(i);
+  while(i>0)
+    int x;
+    scan(x);
+    if a == 0a then
+        soma.Par = soma.Par+x;
+        1 = a;
+    else
+        soma.Impar = soma.Impar+x;
+        0 = a;
+    end
+    i -- ;
+  end
+  string s;
+  scan(s);
+  if(s == "PAR") then
+    print(soma.Par);
+  else
+      if(s=="IMPAR) then
+        print(soma.Impar)
+      else
+        print("erro");
+      
+  end
+end
