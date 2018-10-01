@@ -142,7 +142,7 @@ public class LexicalAnalysis implements AutoCloseable {
         			 lex.type = Tag.UNEXPECTED_EOF;
         			 break;
         		 }
-        		 if(ch == '\n') {
+        		 if(ch == '\n' || ch == '\r') {
         			 
         			 lex.type = Tag.INVALID_TOKEN;
         			 break;
