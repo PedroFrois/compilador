@@ -8,7 +8,7 @@ public enum Tag {
 
     // symbols
     SEMICOLON,//
-    COLON,//
+    COMMA,//
     OPEN_PAR,//
     CLOSE_PAR,//
     // keywords

@@ -63,7 +63,7 @@ public class LexicalAnalysis implements AutoCloseable {
          	case ',':
          		ch = ' ';
          		lex.token = ",";
-         		lex.type= Tag.COLON;
+         		lex.type= Tag.COMMA;
          		break;
          	case '(':
          		ch = ' ';
