@@ -1,4 +1,11 @@
-package Lexical;
+package principal;
+
+import java.io.IOException;
+
+import Lexical.LexicalAnalysis;
+import Lexical.LexicalException;
+import Lexical.Tag;
+import Syntatical.Parser;
 
 public class main {
 
@@ -8,8 +15,14 @@ public class main {
 			System.out.println("Usage: java compiler [Path File]");
 			return;
 		}
+		try {
+			Parser p = new Parser(new LexicalAnalysis(args[0]));
+		} catch (IOException | LexicalException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-		try (LexicalAnalysis l = new LexicalAnalysis(args[0])) {
+		/*try (LexicalAnalysis l = new LexicalAnalysis(args[0])) {
 			int i = 0;
 			// O codigo a seguir eh usado apenas para testar o analisador lexico.
 			// TODO: depois de pronto, comentar o codigo abaixo.
@@ -33,7 +46,7 @@ public class main {
 			l.printTable();
 		} catch (Exception e) {
 			System.err.println("Internal error: " + e.getMessage());
-		}
+		}*/
 	}
 
 	private static boolean checkType(Tag type) {
