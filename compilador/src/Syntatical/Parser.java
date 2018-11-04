@@ -72,7 +72,7 @@ public class Parser {
     private void identListAux() throws IOException {
     	switch(current.type) {
     	case COMMA:
-    		eat(Tag.COMMA);eat(Tag.IDENTIFIER);
+    		eat(Tag.COMMA);eat(Tag.IDENTIFIER);identListAux();
     		break;
 		default:
 			return;
@@ -125,7 +125,7 @@ public class Parser {
     private void stmt() throws IOException {
     	switch(current.type) {
     	case IDENTIFIER:
-    		assignStmt();eat(Tag.COMMA);
+    		assignStmt();eat(Tag.SEMICOLON);
     		break;
     	case IF:
     		ifStmt();
@@ -134,10 +134,10 @@ public class Parser {
     		whileStmt();
     		break;
     	case SCAN:
-    		readStmt();eat(Tag.COMMA);
+    		readStmt();eat(Tag.SEMICOLON);
     		break;
     	case PRINT:
-    		writeStmt();eat(Tag.COMMA);
+    		writeStmt();eat(Tag.SEMICOLON);
     		break;
     	default:
     		showError();
@@ -147,7 +147,9 @@ public class Parser {
     private void assignStmt() throws IOException {
     	switch(current.type) {
     	case IDENTIFIER:
-    		eat(Tag.IDENTIFIER);eat(Tag.ASSIGN);simpleExpr();
+    		eat(Tag.IDENTIFIER);
+    		eat(Tag.ASSIGN);
+    		simpleExpr();
     		break;
     	default:
     		showError();
@@ -398,7 +400,7 @@ public class Parser {
     private void addop() throws IOException {
     	switch(current.type) {
     	case PLUS:
-    		eat(Tag.EQUAL);
+    		eat(Tag.PLUS);
     		break;
     	case MINUS:
     		eat(Tag.MINUS);
@@ -455,7 +457,7 @@ public class Parser {
                 System.out.printf("Fim de arquivo inesperado\n");
                 break;
             default:
-                System.out.printf("Lexema não esperado [%s]\n", current.token);
+                System.out.printf("Lexema não esperado [%s]%s\n", current.token,current.type.name());
                 break;
         }
 

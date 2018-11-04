@@ -17,6 +17,7 @@ public class main {
 		}
 		try {
 			Parser p = new Parser(new LexicalAnalysis(args[0]));
+			p.start();
 		} catch (IOException | LexicalException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
