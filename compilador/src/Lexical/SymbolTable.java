@@ -25,6 +25,9 @@ class SymbolTable {
         st.put("int", Tag.INT_T);
         st.put("float", Tag.FLOAT_T);
         st.put("string", Tag.STRING_T);
+        st.put("and", Tag.AND);
+        st.put("or", Tag.OR);
+        st.put("not", Tag.NOT);
     }
 
     public boolean insert(String token) {

@@ -1,10 +1,10 @@
-int pontuacao, pontuacaoMaxina, disponibilidade;
+﻿int pontuacao, pontuacaoMaxina, disponibilidade;
  string pontuacaoMinima;
  disponibilidade = “Sim”;
  pontuacaoMinima = 50;
  pontuacaoMaxima = 100;
  { Entrada de dados
- Verifica aprovação de candidatos}
+ Verifica aprovação de candidatos
  do
  print("Pontuacao Candidato: ");
  scan(pontuacao);

@@ -172,7 +172,7 @@ public class Parser {
     		eat(Tag.END);
     		break;
     	case ELSE:
-    		eat(Tag.ELSE);stmtList();eat(Tag.END);stmtList();endIfStmt();
+    		eat(Tag.ELSE);stmtList();eat(Tag.END);
     		break;
     	default:
     		showError();
@@ -450,14 +450,14 @@ public class Parser {
 
         switch (current.type) {
             case INVALID_TOKEN:
-                System.out.printf("Lexema inválido [%s]\n", current.token);
+                System.out.printf("Lexema invalido [%s]\n", current.token);
                 break;
             case UNEXPECTED_EOF:
             case END_OF_FILE:
                 System.out.printf("Fim de arquivo inesperado\n");
                 break;
             default:
-                System.out.printf("Lexema não esperado [%s]%s\n", current.token,current.type.name());
+                System.out.printf("Lexema nao esperado [%s]%s\n", current.token,current.type.name());
                 break;
         }
 
