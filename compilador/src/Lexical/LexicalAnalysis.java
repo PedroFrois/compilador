@@ -6,7 +6,7 @@ import java.io.FileReader;
 public class LexicalAnalysis implements AutoCloseable {
 
     private int line;
-    private SymbolTable st;
+    public SymbolTable st;
     private FileReader input;
     private char ch;
     
@@ -194,7 +194,7 @@ public class LexicalAnalysis implements AutoCloseable {
     			 readch();
 			 }
         	 if(st.contains(lex.token)) {
-        		 lex.type = st.find(lex.token);
+        		 lex.type = st.find(lex.token).getTag();
         	 }else {
         		 st.insert(lex.token);
         	 }

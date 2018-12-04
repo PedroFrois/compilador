@@ -1,0 +1,29 @@
+start
+  int i,a,a0;
+  float somaPar,x,somaImpar;
+  string s;
+  scan(i);
+  do
+    scan(x);
+    if a == a0 then
+        somaPar = somaPar+x;
+        a = 1;
+    else
+        somaImpar = somaImpar+x;
+        a = 0;
+    end
+    i=i-1;
+  while(i>0)  
+  end
+  scan(s);
+  if(s == "PAR") then
+    print(somaPar);
+  else
+      if(s=="IMPAR") then
+        print(somaImpar);
+      else
+        print("erro");
+      
+  end
+end
+exit

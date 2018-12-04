@@ -47,52 +47,93 @@ public class Parser {
     		return;
     	}
     }
-    private void decl() throws IOException {
+    private IdentifierType decl() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
+    	IdentifierType aux,aux2;
     	switch(current.type) {
     	case INT_T:
     	case FLOAT_T:
     	case STRING_T:
-    		type();identList();eat(Tag.SEMICOLON);
+    		aux = type();aux2 =identList(aux);eat(Tag.SEMICOLON);
+    		if(aux == IdentifierType.ERROR || aux2 == IdentifierType.ERROR) {
+    			t= IdentifierType.ERROR;
+    			showSemanticalError(0);
+    		}
+    		else
+    			t = aux;
     		break;
     	default:
     		showError();
     	}
+    	return t;
     }
     
-    private void identList() throws IOException {
+    private IdentifierType identList(IdentifierType t) throws IOException {
+    	IdentifierType t2 = IdentifierType.UNDEFINED;
+    	IdentifierType aux;
     	switch(current.type) {
     	case IDENTIFIER:
-    		eat(Tag.IDENTIFIER);identListAux();
+    		String token = current.token;
+    		eat(Tag.IDENTIFIER);
+    		aux = identListAux(t);
+    		if(getIdType(token) != IdentifierType.UNDEFINED || 
+    	       aux == IdentifierType.ERROR) {
+    			t2 = IdentifierType.ERROR;
+    			showSemanticalError(0);
+    		}else {
+        		setIdType(token, t);    	
+        		t2 = t;
+    		}
     		break;
 		default:
 			showError();
     	}
+    	return t2;
     }
     
-    private void identListAux() throws IOException {
+    private IdentifierType identListAux(IdentifierType t) throws IOException {
+    	IdentifierType t2 = IdentifierType.UNDEFINED;
+    	IdentifierType aux;
     	switch(current.type) {
     	case COMMA:
-    		eat(Tag.COMMA);eat(Tag.IDENTIFIER);identListAux();
+    		eat(Tag.COMMA);
+    		String token = current.token;
+    		eat(Tag.IDENTIFIER);
+    		aux = identListAux(t);
+    		if(getIdType(token) != IdentifierType.UNDEFINED || 
+    	       aux == IdentifierType.ERROR) {
+    			t2 = IdentifierType.ERROR;
+    			showSemanticalError(0);
+    		}else {
+        		setIdType(token, t);    	
+        		t2 = t;
+    		}
     		break;
 		default:
-			return;
+			break;
     	}
+    	return t2;
     }
     
-    private void type() throws IOException {
+    private IdentifierType type() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
     	switch(current.type) {
     	case INT_T:
+    		t = IdentifierType.INT;
     		eat(Tag.INT_T);
     		break;
     	case FLOAT_T:
+    		t = IdentifierType.FLOAT;
     		eat(Tag.FLOAT_T);
     		break;
     	case STRING_T:
+    		t = IdentifierType.STRING;
     		eat(Tag.STRING_T);
     		break;
     	default:
     		showError();
     	}
+    	return t;
     }
     
     private void stmtList() throws IOException {
@@ -122,6 +163,7 @@ public class Parser {
     		return;
     	}
     }
+    
     private void stmt() throws IOException {
     	switch(current.type) {
     	case IDENTIFIER:
@@ -144,16 +186,30 @@ public class Parser {
     	}
     }
     
-    private void assignStmt() throws IOException {
+    private IdentifierType assignStmt() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
+    	IdentifierType aux,aux1;
     	switch(current.type) {
     	case IDENTIFIER:
+    		aux = getIdType(current.token);
     		eat(Tag.IDENTIFIER);
     		eat(Tag.ASSIGN);
-    		simpleExpr();
+    		aux1 = simpleExpr();
+    		if(aux == IdentifierType.UNDEFINED) {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(2);
+    		}
+    		else if( aux == aux1)
+    			t = aux;
+    		else {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
     		break;
     	default:
     		showError();
     	}
+    	return t;
     }
     
     private void ifStmt() throws IOException {
@@ -178,7 +234,8 @@ public class Parser {
     		showError();
     	}
     }
-    private void condition() throws IOException {
+    private IdentifierType condition() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
     	switch(current.type) {
     	case IDENTIFIER:
     	case INT_C:
@@ -187,11 +244,17 @@ public class Parser {
     	case OPEN_PAR:
     	case NOT:
     	case MINUS:
-    		expression();
+    		if(expression() == IdentifierType.BOOL)
+    			t = IdentifierType.BOOL;
+    		else {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
     		break;
     	default:
     		showError();
     	}
+    	return t;
     }
     
     private void whileStmt() throws IOException {
@@ -234,7 +297,9 @@ public class Parser {
     	}
     }
     
-    private void writable() throws IOException {
+    private IdentifierType writable() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
+    	IdentifierType aux;
     	switch(current.type) {
     	case IDENTIFIER:
     	case INT_C:
@@ -243,15 +308,23 @@ public class Parser {
     	case OPEN_PAR:
     	case NOT:
     	case MINUS:
-    		simpleExpr();
+    		aux = simpleExpr();
+    		if(aux == IdentifierType.INT || aux == IdentifierType.FLOAT || aux == IdentifierType.STRING)
+    			t = aux;
+    		else {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
     		break;
     	default:
     		showError();
     	}
-        
+        return t;
     }
     
-    private void expression() throws IOException {
+    private IdentifierType expression() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
+    	IdentifierType aux,aux1;
     	switch(current.type) {
     	case IDENTIFIER:
     	case INT_C:
@@ -260,27 +333,60 @@ public class Parser {
     	case OPEN_PAR:
     	case NOT:
     	case MINUS:
-    		simpleExpr();expressionAux();
+    		aux = simpleExpr();
+    		aux1 = expressionAux();
+    		if(aux1 == IdentifierType.ERROR || aux == IdentifierType.ERROR) {
+    			t= IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
+    		if(aux1 == IdentifierType.UNDEFINED)t = aux;
+    		else if(aux == aux1) t = IdentifierType.BOOL;
+    		else {
+    			t= IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
     		break;
 		default:
 			showError();
     	}
+    	return t;
     }
-    private void expressionAux() throws IOException {
+    private IdentifierType expressionAux() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
+    	IdentifierType aux;
+    	
     	switch(current.type) {
     	case EQUAL:
+    	case DIFF:
+    		relop();aux=simpleExpr();
+    		if(aux == IdentifierType.STRING || aux == IdentifierType.INT || aux == IdentifierType.FLOAT)
+    			t = aux;
+    		else {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
+    		break;
     	case GREATER:
     	case GREATER_EQUAL:
     	case LESSER:
     	case LESSER_EQUAL:
-    	case DIFF:
-    		relop();simpleExpr();
+    		relop();aux=simpleExpr();
+    		if( aux == IdentifierType.INT || aux == IdentifierType.FLOAT)
+    			t = aux;
+    		else {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
     		break;
 		default:
-			return;
+			break;
     	}
+    	return t;
     }
-    private void simpleExpr() throws IOException {
+    
+    private IdentifierType simpleExpr() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
+    	IdentifierType aux,aux1;
     	switch(current.type) {
     	case IDENTIFIER:
     	case INT_C:
@@ -289,25 +395,101 @@ public class Parser {
     	case OPEN_PAR:
     	case NOT:
     	case MINUS:
-    		term();simpleExprAux();
+    		aux = term();
+    		aux1 = simpleExprAux();
+    		if(aux == IdentifierType.ERROR || aux1 == IdentifierType.ERROR) {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
+    		else if(aux1 == IdentifierType.UNDEFINED)t = aux;
+    		else if(aux == aux1) t = aux;
+    		else {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
     		break;
 		default:
 			showError();
     	}
+    	return t;
     }
-    private void simpleExprAux() throws IOException {
+    
+    private IdentifierType simpleExprAux() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
+    	IdentifierType aux,aux1;
     	switch(current.type) {
     	case PLUS:
+    		addop();aux = term();aux1 = simpleExprAux();
+    		if(aux1 == IdentifierType.UNDEFINED) {
+    			if(aux == IdentifierType.INT || aux == IdentifierType.STRING || aux == IdentifierType.FLOAT)
+    				t = aux;
+    			else {
+    				t = IdentifierType.ERROR;
+        			showSemanticalError(1);
+    			}
+    		}else if(aux1 == IdentifierType.INT || aux1 == IdentifierType.STRING || aux1 == IdentifierType.FLOAT){
+    			if(aux == aux1)
+    				t = aux;
+    			else {
+    				t = IdentifierType.ERROR;
+        			showSemanticalError(1);
+    			}
+    		}else {
+				t = IdentifierType.ERROR;   
+    			showSemanticalError(1); 			
+    		}
+    		break;
     	case MINUS:
+    		addop();aux = term();aux1 = simpleExprAux();
+    		if(aux1 == IdentifierType.UNDEFINED) {
+    			if(aux == IdentifierType.INT || aux == IdentifierType.FLOAT)
+    				t = aux;
+    			else {
+    				t = IdentifierType.ERROR;
+        			showSemanticalError(1);
+    			}
+    		}else if(aux1 == IdentifierType.INT || aux1 == IdentifierType.FLOAT){
+    			if(aux == aux1)
+    				t = aux;
+    			else {
+    				t = IdentifierType.ERROR;
+        			showSemanticalError(1);
+    			}
+    		}else {
+				t = IdentifierType.ERROR; 
+    			showSemanticalError(1);   			
+    		}
+    		break;
     	case OR:
-    		addop();term();simpleExprAux();
+    		addop();aux = term();aux1 = simpleExprAux();
+    		if(aux1 == IdentifierType.UNDEFINED) {
+    			if(aux == IdentifierType.BOOL)
+    				t = aux;
+    			else {
+    				t = IdentifierType.ERROR;
+        			showSemanticalError(1);
+    			}
+    		}else if(aux1 == IdentifierType.BOOL){
+    			if(aux == aux1)
+    				t = aux;
+    			else {
+    				t = IdentifierType.ERROR;
+        			showSemanticalError(1);
+    			}
+    		}else {
+				t = IdentifierType.ERROR;  
+    			showSemanticalError(1);  			
+    		}
     		break;
 		default:
-			return;
+			break;
     	}
+    	return t;
     }
     
-    private void term() throws IOException {
+    private IdentifierType term() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
+    	IdentifierType aux,aux1;
     	switch(current.type) {
     	case IDENTIFIER:
     	case INT_C:
@@ -316,88 +498,171 @@ public class Parser {
     	case OPEN_PAR:
     	case NOT:
     	case MINUS:
-    		factorA();termAux();
+    		aux = factorA();
+    		aux1 = termAux();
+    		if(aux == IdentifierType.ERROR || aux1 == IdentifierType.ERROR) {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
+    		else if(aux1 == IdentifierType.UNDEFINED)t = aux;
+    		else if(aux == aux1) t = aux;
+    		else {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
     		break;
 		default:
 			showError();
     	}
+    	return t;
     }
     
-    private void termAux() throws IOException {
+    private IdentifierType termAux() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
+    	IdentifierType aux,aux1,aux2;
     	switch(current.type) {
     	case MULT:
     	case DIV:
     	case AND:
-    		mulop();factorA();termAux();
+    		aux = mulop();aux1 = factorA();aux2 = termAux();
+    		if(aux2 == IdentifierType.UNDEFINED) {
+    			if(aux == IdentifierType.BOOL) {
+        			if( aux1 == IdentifierType.BOOL) 
+        				t = IdentifierType.BOOL;
+        			else {
+        				t = IdentifierType.ERROR;
+            			showSemanticalError(1);
+        			}
+        		}else {
+        			if(aux1 == IdentifierType.INT || aux1 == IdentifierType.FLOAT)
+        				t = aux1;
+        			else {
+        				t = IdentifierType.ERROR;
+            			showSemanticalError(1);
+        			}
+        		}
+    		}else {
+    			if(aux == IdentifierType.BOOL) {
+    				if(aux1 == IdentifierType.BOOL && aux2 == IdentifierType.BOOL)
+    					t = IdentifierType.BOOL;
+    				else {
+    					t = IdentifierType.ERROR;
+    	    			showSemanticalError(1);
+    				}
+    					
+    			}else {
+    				if(aux2 == aux1)
+    					t = aux;
+    				else {
+    					t = IdentifierType.ERROR;
+    	    			showSemanticalError(1);
+    				}
+    			}
+    		}
     		break;
 		default:
-			return;
+			break;
     	}
+    	return t;
     }
     
-    private void factorA() throws IOException {
+    private IdentifierType factorA() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
+    	IdentifierType aux;
     	switch(current.type) {
     	case IDENTIFIER:
     	case INT_C:
     	case FLOAT_C:
     	case STRING_C:
     	case OPEN_PAR:
-    		factor();
+    		t = factor();
     		break;
     	case NOT:
-    		eat(Tag.NOT);factor();
+    		
+    		eat(Tag.NOT);
+    		aux = factor();
+    		if(aux == IdentifierType.BOOL)t=IdentifierType.BOOL;
+    		else {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
     		break;
     	case MINUS:
-    		eat(Tag.MINUS);factor();
+    		eat(Tag.MINUS);
+    		aux = factor();
+    		if(aux == IdentifierType.INT || aux == IdentifierType.FLOAT) t = aux;
+    		else {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
     		break;
 		default:
 			showError();
     	}
+    	return t;
     }
-    private void factor() throws IOException {
+    private IdentifierType factor() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
     	switch(current.type) {
 		case IDENTIFIER:
+			t = getIdType(current.token);
+			if(t == IdentifierType.UNDEFINED) {
+				t = IdentifierType.ERROR;
+				showSemanticalError(2);
+			}
 			eat(Tag.IDENTIFIER);
 			break;
 		case INT_C:
 		case FLOAT_C:
 		case STRING_C:
-			constant();
+			t=constant();
 			break;
 		case OPEN_PAR:
-			eat(Tag.OPEN_PAR);expression();eat(Tag.CLOSE_PAR);
+			eat(Tag.OPEN_PAR);
+			t=expression();
+			eat(Tag.CLOSE_PAR);
 			break;
 		default:
 			showError();
     	}
+    	return t;
     }
     
-    private void relop() throws IOException {
+    private IdentifierType relop() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
     	switch(current.type) {
     	case EQUAL:
+    		t = IdentifierType.BOOL;
     		eat(Tag.EQUAL);
     		break;
     	case GREATER:
+    		t = IdentifierType.BOOL;
     		eat(Tag.GREATER);
     		break;
     	case GREATER_EQUAL:
+    		t = IdentifierType.BOOL;
     		eat(Tag.GREATER_EQUAL);
     		break;
     	case LESSER:
+    		t = IdentifierType.BOOL;
     		eat(Tag.LESSER);
     		break;
     	case LESSER_EQUAL:
+    		t = IdentifierType.BOOL;
     		eat(Tag.LESSER_EQUAL);
     		break;
     	case DIFF:
+    		t = IdentifierType.BOOL;
     		eat(Tag.DIFF);
     		break;
 		default:
 			showError();
     	}
+    	return t;
     }
     
-    private void addop() throws IOException {
+    private IdentifierType addop() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
     	switch(current.type) {
     	case PLUS:
     		eat(Tag.PLUS);
@@ -406,14 +671,17 @@ public class Parser {
     		eat(Tag.MINUS);
     		break;
     	case OR:
+    		t = IdentifierType.BOOL;
     		eat(Tag.OR);
     		break;
 		default:
 			showError();
     	}
+    	return t;
     }
     
-    private void mulop() throws IOException {
+    private IdentifierType mulop() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
     	switch(current.type) {
     	case MULT:
     		eat(Tag.MULT);
@@ -422,27 +690,42 @@ public class Parser {
     		eat(Tag.DIV);
     		break;
     	case AND:
+    		t = IdentifierType.BOOL;
     		eat(Tag.AND);
     		break;
 		default:
 			showError();
     	}
+    	return t;
     }
     
-    private void constant() throws IOException {
+    private IdentifierType constant() throws IOException {
+    	IdentifierType t = IdentifierType.UNDEFINED;
     	switch(current.type) {
     	case INT_C:
     		eat(Tag.INT_C);
+    		t = IdentifierType.INT;
     		break;
     	case FLOAT_C:
     		eat(Tag.FLOAT_C);
+    		t = IdentifierType.FLOAT;
     		break;
     	case STRING_C:
     		eat(Tag.STRING_C);
+    		t = IdentifierType.STRING;
     		break;
 		default:
 			showError();
     	}
+    	return t;
+    }
+    
+    private IdentifierType getIdType(String token) {
+    	return this.lex.st.find(token).getType();
+    }
+    
+    private void setIdType(String token,IdentifierType t) {
+    	this.lex.st.find(token).setType(t);
     }
     
     private void showError() {
@@ -455,6 +738,27 @@ public class Parser {
             case UNEXPECTED_EOF:
             case END_OF_FILE:
                 System.out.printf("Fim de arquivo inesperado\n");
+                break;
+            default:
+                System.out.printf("Lexema nao esperado [%s]%s\n", current.token,current.type.name());
+                break;
+        }
+
+        System.exit(1);
+    }
+    
+    private void showSemanticalError(int error) {
+        System.out.printf("%02d: ", lex.getLine());
+
+        switch (error) {
+            case 0:
+                System.out.printf("Redefinição de váriavel \n");
+                break;
+            case 1:
+                System.out.printf("Tipos Incompativeis \n");
+                break;
+            case 2:
+                System.out.printf("Variavel não declarada \n");
                 break;
             default:
                 System.out.printf("Lexema nao esperado [%s]%s\n", current.token,current.type.name());

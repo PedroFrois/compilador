@@ -1,0 +1,17 @@
+start
+ int a, b,x,y;
+ int result;
+ int total;
+ a = 2;
+ x = 1;
+ y = 3;
+ scan (b);
+ scan (y);
+ result = (a*b + 1) / 2 ;
+ print ("Resultado: ");
+ print (result);
+ print ("Total: ");
+ total = y / x;
+ print ("Total: ");
+ print (total);
+exit
