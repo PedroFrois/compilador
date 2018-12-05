@@ -1,13 +1,12 @@
 start
- int a, b,x,y;
+ int a, b;
  int result;
- int total;
+ float x,total;
  a = 2;
- x = 1;
- y = 3;
+ x = 1.0;
  scan (b);
  scan (y);
- result = (a*b + 1) / 2 ;
+ result = (a*b + 1) / 2;
  print ("Resultado: ");
  print (result);
  print ("Total: ");

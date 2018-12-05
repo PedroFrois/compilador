@@ -278,9 +278,15 @@ public class Parser {
     }
     
     private void readStmt() throws IOException {
+    	IdentifierType aux;
     	switch(current.type) {
     	case SCAN:
-    		eat(Tag.SCAN);eat(Tag.OPEN_PAR);eat(Tag.IDENTIFIER);eat(Tag.CLOSE_PAR);
+    		eat(Tag.SCAN);eat(Tag.OPEN_PAR);
+    		aux = getIdType(current.token);
+    		if(aux == IdentifierType.UNDEFINED) {
+    			showSemanticalError(2);
+    		}
+    		eat(Tag.IDENTIFIER);eat(Tag.CLOSE_PAR);
     		break;
 		default:
 			showError();
@@ -752,13 +758,13 @@ public class Parser {
 
         switch (error) {
             case 0:
-                System.out.printf("Redefinição de váriavel \n");
+                System.out.printf("Redefinicao de variavel \n");
                 break;
             case 1:
                 System.out.printf("Tipos Incompativeis \n");
                 break;
             case 2:
-                System.out.printf("Variavel não declarada \n");
+                System.out.printf("Variavel nao declarada \n");
                 break;
             default:
                 System.out.printf("Lexema nao esperado [%s]%s\n", current.token,current.type.name());

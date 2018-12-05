@@ -1,8 +1,6 @@
 start
-  int i,a,a0;
-  float somaPar,x,somaImpar;
-  string s;
-  scan(i);
+  int i,a,a0;float somaPar,somaImpar,x; string s;
+  scan(i); 
   do
     scan(x);
     if a == a0 then

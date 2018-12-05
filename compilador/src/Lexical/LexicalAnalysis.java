@@ -44,6 +44,7 @@ public class LexicalAnalysis implements AutoCloseable {
         	 else if(ch == '{') {
             	 while(ch != '}') {
             		 readch();
+            		 if(ch == '\n') line++;
             		 if(ch == 65535) {
                 		 lex.type= Tag.UNEXPECTED_EOF;
                 		 return lex;
