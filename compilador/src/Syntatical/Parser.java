@@ -7,14 +7,21 @@ import Lexical.*;
 public class Parser {
 	private LexicalAnalysis lex;
     private Lexeme current;
-
+    private String obj;
+    private int nextAddress;
+    private int indexLabel;
     public Parser(LexicalAnalysis lex) throws IOException {
         this.lex = lex;
         this.current = lex.nextToken();
+        obj = "";
+        nextAddress=0;
+        indexLabel =0;
     }
 
     public void start() throws IOException {
+    	obj+="START\n";
     	program();
+    	obj+="STOP\n";
     }
 
     private void eat(Tag type) throws IOException {
@@ -29,7 +36,8 @@ public class Parser {
     private void program() throws IOException {
     	switch(current.type) {
     	case START:
-    		eat(Tag.START);declList();stmtList();eat(Tag.EXIT);eat(Tag.END_OF_FILE);
+    		eat(Tag.START);declList();	
+    		stmtList();eat(Tag.EXIT);eat(Tag.END_OF_FILE);
     		break;
     	default:
     		showError();
@@ -75,6 +83,19 @@ public class Parser {
     	case IDENTIFIER:
     		String token = current.token;
     		eat(Tag.IDENTIFIER);
+    		switch(t) {
+			case INT:
+				obj+="PUSHN 1\n";
+				break;
+			case FLOAT:
+				obj+="PUSHF 0.0\n";
+				break;
+			case STRING:
+				obj+="PUSHS \"\"\n";
+				break;
+			default:
+				showSemanticalError(1);
+		}
     		aux = identListAux(t);
     		if(getIdType(token) != IdentifierType.UNDEFINED || 
     	       aux == IdentifierType.ERROR) {
@@ -99,6 +120,19 @@ public class Parser {
     		eat(Tag.COMMA);
     		String token = current.token;
     		eat(Tag.IDENTIFIER);
+    		switch(t) {
+				case INT:
+					obj+="PUSHN 1\n";
+					break;
+				case FLOAT:
+					obj+="PUSHF 0.0\n";
+					break;
+				case STRING:
+					obj+="PUSHS \"\"\n";
+					break;
+				default:
+					showSemanticalError(1);
+			}
     		aux = identListAux(t);
     		if(getIdType(token) != IdentifierType.UNDEFINED || 
     	       aux == IdentifierType.ERROR) {
@@ -189,8 +223,10 @@ public class Parser {
     private IdentifierType assignStmt() throws IOException {
     	IdentifierType t = IdentifierType.UNDEFINED;
     	IdentifierType aux,aux1;
+    	int address;
     	switch(current.type) {
     	case IDENTIFIER:
+    		address= getIdAddress(current.token);
     		aux = getIdType(current.token);
     		eat(Tag.IDENTIFIER);
     		eat(Tag.ASSIGN);
@@ -205,6 +241,7 @@ public class Parser {
     			t = IdentifierType.ERROR;
     			showSemanticalError(1);
     		}
+    		obj += "STOREL "+address+"\n";
     		break;
     	default:
     		showError();
@@ -213,18 +250,29 @@ public class Parser {
     }
     
     private void ifStmt() throws IOException {
+    	String elseLabel = "LABEL"+this.indexLabel;
+    	this.indexLabel++;
+    	String endLabel = "LABEL"+this.indexLabel;
+    	this.indexLabel++;
     	switch(current.type) {
     	case IF:
-    		eat(Tag.IF);condition();eat(Tag.THEN);stmtList();endIfStmt();
+    		eat(Tag.IF);condition();
+    		obj += "JZ "+elseLabel+"\n";
+    		eat(Tag.THEN);stmtList();
+    		obj+= "JUMP "+endLabel+"\n";
+    		endIfStmt(elseLabel,endLabel);
     		break;
     	default:
     		showError();
     	}
     }
     
-    private void endIfStmt() throws IOException {
+    private void endIfStmt(String elseLabel,String endLabel) throws IOException {
+
+		obj += elseLabel+":";
     	switch(current.type) {
     	case END:
+    		obj += "NOP\n";//não tem else
     		eat(Tag.END);
     		break;
     	case ELSE:
@@ -233,6 +281,7 @@ public class Parser {
     	default:
     		showError();
     	}
+		obj += endLabel+":";
     }
     private IdentifierType condition() throws IOException {
     	IdentifierType t = IdentifierType.UNDEFINED;
@@ -258,19 +307,26 @@ public class Parser {
     }
     
     private void whileStmt() throws IOException {
+    	String label = "LABEL" + this.indexLabel;
+    	indexLabel++;
     	switch(current.type) {
     	case DO:
-    		eat(Tag.DO);stmtList();whileSuffix();
+    		obj+=label+":";
+    		eat(Tag.DO);stmtList();whileSuffix(label);
     		break;
 		default:
 			showError();
     	}
     }
     
-    private void whileSuffix() throws IOException {
+    private void whileSuffix(String label) throws IOException {
     	switch(current.type) {
     	case WHILE:
-    		eat(Tag.WHILE);condition();eat(Tag.END);
+    		eat(Tag.WHILE);condition();
+
+    		obj += "NOT\n";
+    		obj+="JZ "+label+"\n";//jz pula quando falso
+    		eat(Tag.END);
     		break;
 		default:
 			showError();
@@ -279,14 +335,22 @@ public class Parser {
     
     private void readStmt() throws IOException {
     	IdentifierType aux;
+    	int address;
     	switch(current.type) {
     	case SCAN:
     		eat(Tag.SCAN);eat(Tag.OPEN_PAR);
     		aux = getIdType(current.token);
+    		address = getIdAddress(current.token);
+    		eat(Tag.IDENTIFIER);eat(Tag.CLOSE_PAR);
+    		obj+="READ\n";
     		if(aux == IdentifierType.UNDEFINED) {
     			showSemanticalError(2);
+    		}else if(aux == IdentifierType.INT){
+    			obj += "ATOI\n";
+    		}else if(aux == IdentifierType.FLOAT) {
+    			obj += "ATOF\n";
     		}
-    		eat(Tag.IDENTIFIER);eat(Tag.CLOSE_PAR);
+    		obj += "STOREL "+address+"\n";
     		break;
 		default:
 			showError();
@@ -296,7 +360,22 @@ public class Parser {
     private void writeStmt() throws IOException {
     	switch(current.type) {
     	case PRINT:
-    		eat(Tag.PRINT);eat(Tag.OPEN_PAR);writable();eat(Tag.CLOSE_PAR);
+    		eat(Tag.PRINT);eat(Tag.OPEN_PAR);
+    		switch(writable()) {
+	    		case INT:
+	    			obj+= "WRITEI\n";
+	    			break;
+	    		case STRING:
+    				obj+= "WRITES\n";
+	    			break;
+	    		case FLOAT:
+	    			obj+= "WRITEF\n";
+	    			break;
+    			default:
+        			showSemanticalError(1);
+	    				
+    		};
+    		eat(Tag.CLOSE_PAR);
     		break;
 		default:
 			showError();
@@ -363,6 +442,16 @@ public class Parser {
     	
     	switch(current.type) {
     	case EQUAL:
+    		relop();aux=simpleExpr();
+    		if(aux == IdentifierType.STRING || aux == IdentifierType.INT || aux == IdentifierType.FLOAT)
+    			t = aux;
+    		else {
+    			t = IdentifierType.ERROR;
+    			showSemanticalError(1);
+    		}
+    		obj+="EQUAL\n";
+    		break;
+    		
     	case DIFF:
     		relop();aux=simpleExpr();
     		if(aux == IdentifierType.STRING || aux == IdentifierType.INT || aux == IdentifierType.FLOAT)
@@ -371,17 +460,62 @@ public class Parser {
     			t = IdentifierType.ERROR;
     			showSemanticalError(1);
     		}
+    		obj+="EQUAL\n";
+    		obj+="NOT\n";
     		break;
+    		
     	case GREATER:
-    	case GREATER_EQUAL:
-    	case LESSER:
-    	case LESSER_EQUAL:
     		relop();aux=simpleExpr();
-    		if( aux == IdentifierType.INT || aux == IdentifierType.FLOAT)
+    		if( aux == IdentifierType.INT) {
     			t = aux;
-    		else {
+    			obj += "SUP\n";
+    		}else if(aux == IdentifierType.FLOAT) {
+    			t = aux;
+    			obj += "FSUP\n";
+    		}else {
     			t = IdentifierType.ERROR;
     			showSemanticalError(1);
+    		}
+    		
+    		
+    		break;
+    		
+    	case GREATER_EQUAL:
+    		relop();aux=simpleExpr();
+    		if( aux == IdentifierType.INT) {
+    			t = aux;
+    			obj += "SUPEQ\n";
+    		}else if(aux == IdentifierType.FLOAT) {
+    			t = aux;
+    			obj += "FSUPEQ\n";
+    		}else {
+    			t = IdentifierType.ERROR;
+    		}
+    		break;
+    		
+    	case LESSER:
+    		relop();aux=simpleExpr();
+    		if( aux == IdentifierType.INT) {
+    			t = aux;
+    			obj += "INF\n";
+    		}else if(aux == IdentifierType.FLOAT) {
+    			t = aux;
+    			obj += "FINF\n";
+    		}else {
+    			t = IdentifierType.ERROR;
+    		}
+    		break;
+    		
+    	case LESSER_EQUAL:
+    		relop();aux=simpleExpr();
+    		if( aux == IdentifierType.INT) {
+    			t = aux;
+    			obj += "INFEQ\n";
+    		}else if(aux == IdentifierType.FLOAT) {
+    			t = aux;
+    			obj += "FINFEQ\n";
+    		}else {
+    			t = IdentifierType.ERROR;
     		}
     		break;
 		default:
@@ -444,7 +578,21 @@ public class Parser {
 				t = IdentifierType.ERROR;   
     			showSemanticalError(1); 			
     		}
+    		switch(t) {
+	    		case STRING:
+	    			obj+="CONCAT\n";
+	    			break;
+	    		case INT:
+	    			obj+="ADD\n";
+	    			break;
+	    		case FLOAT:
+	    			obj+="FADD\n";
+	    			break;
+    			default:
+    				showSemanticalError(1);
+    		}
     		break;
+    		
     	case MINUS:
     		addop();aux = term();aux1 = simpleExprAux();
     		if(aux1 == IdentifierType.UNDEFINED) {
@@ -465,7 +613,20 @@ public class Parser {
 				t = IdentifierType.ERROR; 
     			showSemanticalError(1);   			
     		}
+
+    		switch(t) {
+	    		case INT:
+	    			obj+="SUB\n";
+	    			break;
+	    		case FLOAT:
+	    			obj+="FSUB\n";
+	    			break;
+	    		default:
+	    			showSemanticalError(1);
+    		}
+    		
     		break;
+    		
     	case OR:
     		addop();aux = term();aux1 = simpleExprAux();
     		if(aux1 == IdentifierType.UNDEFINED) {
@@ -486,6 +647,9 @@ public class Parser {
 				t = IdentifierType.ERROR;  
     			showSemanticalError(1);  			
     		}
+    		obj += "ADD\n";
+    		obj += "PUSHI 0\n";
+    		obj += "SUP\n";
     		break;
 		default:
 			break;
@@ -528,7 +692,103 @@ public class Parser {
     	IdentifierType aux,aux1,aux2;
     	switch(current.type) {
     	case MULT:
+    		aux = mulop();aux1 = factorA();aux2 = termAux();
+    		if(aux2 == IdentifierType.UNDEFINED) {
+    			if(aux == IdentifierType.BOOL) {
+        			if( aux1 == IdentifierType.BOOL) 
+        				t = IdentifierType.BOOL;
+        			else {
+        				t = IdentifierType.ERROR;
+            			showSemanticalError(1);
+        			}
+        		}else {
+        			if(aux1 == IdentifierType.INT || aux1 == IdentifierType.FLOAT)
+        				t = aux1;
+        			else {
+        				t = IdentifierType.ERROR;
+            			showSemanticalError(1);
+        			}
+        		}
+    		}else {
+    			if(aux == IdentifierType.BOOL) {
+    				if(aux1 == IdentifierType.BOOL && aux2 == IdentifierType.BOOL)
+    					t = IdentifierType.BOOL;
+    				else {
+    					t = IdentifierType.ERROR;
+    	    			showSemanticalError(1);
+    				}
+    					
+    			}else {
+    				if(aux2 == aux1)
+    					t = aux;
+    				else {
+    					t = IdentifierType.ERROR;
+    	    			showSemanticalError(1);
+    				}
+    			}
+    		}
+    		
+    		switch(t) {
+	    		case INT:
+	    			obj+="MUL\n";
+	    			break;
+	    		case FLOAT:
+	    			obj+="FMUL\n";
+	    			break;
+    			default:
+    				showSemanticalError(1);
+    		}
+    		break;
+    		
     	case DIV:
+    		aux = mulop();aux1 = factorA();aux2 = termAux();
+    		if(aux2 == IdentifierType.UNDEFINED) {
+    			if(aux == IdentifierType.BOOL) {
+        			if( aux1 == IdentifierType.BOOL) 
+        				t = IdentifierType.BOOL;
+        			else {
+        				t = IdentifierType.ERROR;
+            			showSemanticalError(1);
+        			}
+        		}else {
+        			if(aux1 == IdentifierType.INT || aux1 == IdentifierType.FLOAT)
+        				t = aux1;
+        			else {
+        				t = IdentifierType.ERROR;
+            			showSemanticalError(1);
+        			}
+        		}
+    		}else {
+    			if(aux == IdentifierType.BOOL) {
+    				if(aux1 == IdentifierType.BOOL && aux2 == IdentifierType.BOOL)
+    					t = IdentifierType.BOOL;
+    				else {
+    					t = IdentifierType.ERROR;
+    	    			showSemanticalError(1);
+    				}
+    					
+    			}else {
+    				if(aux2 == aux1)
+    					t = aux;
+    				else {
+    					t = IdentifierType.ERROR;
+    	    			showSemanticalError(1);
+    				}
+    			}
+    		}
+    		
+    		switch(t) {
+				case INT:
+					obj+="DIV\n";
+					break;
+				case FLOAT:
+					obj+="FDIV\n";
+					break;
+				default:
+					showSemanticalError(1);	
+    		}
+    		break;
+    		
     	case AND:
     		aux = mulop();aux1 = factorA();aux2 = termAux();
     		if(aux2 == IdentifierType.UNDEFINED) {
@@ -565,6 +825,8 @@ public class Parser {
     				}
     			}
     		}
+    		
+    		obj += "MUL\n";
     		break;
 		default:
 			break;
@@ -587,6 +849,7 @@ public class Parser {
     		
     		eat(Tag.NOT);
     		aux = factor();
+    		obj+="NOT\n";
     		if(aux == IdentifierType.BOOL)t=IdentifierType.BOOL;
     		else {
     			t = IdentifierType.ERROR;
@@ -596,11 +859,18 @@ public class Parser {
     	case MINUS:
     		eat(Tag.MINUS);
     		aux = factor();
-    		if(aux == IdentifierType.INT || aux == IdentifierType.FLOAT) t = aux;
+    		if(aux == IdentifierType.INT) {
+        		obj += "PUSHI 0\n";
+    		}else if(aux == IdentifierType.FLOAT) {
+    			t = aux;
+        		obj += "PUSHI 0.0\n";
+    		}
     		else {
     			t = IdentifierType.ERROR;
     			showSemanticalError(1);
     		}
+    		obj += "SWAP\n";
+    		obj += "MINUS\n";
     		break;
 		default:
 			showError();
@@ -616,6 +886,7 @@ public class Parser {
 				t = IdentifierType.ERROR;
 				showSemanticalError(2);
 			}
+			obj+= "PUSHL "+ getIdAddress(current.token)+"\n";
 			eat(Tag.IDENTIFIER);
 			break;
 		case INT_C:
@@ -709,14 +980,17 @@ public class Parser {
     	IdentifierType t = IdentifierType.UNDEFINED;
     	switch(current.type) {
     	case INT_C:
+    		obj+="PUSHI "+current.token+"\n";
     		eat(Tag.INT_C);
     		t = IdentifierType.INT;
     		break;
     	case FLOAT_C:
+    		obj+="PUSHF "+current.token+"\n";
     		eat(Tag.FLOAT_C);
     		t = IdentifierType.FLOAT;
     		break;
     	case STRING_C:
+    		obj+="PUSHS \""+current.token+"\"\n";
     		eat(Tag.STRING_C);
     		t = IdentifierType.STRING;
     		break;
@@ -728,10 +1002,17 @@ public class Parser {
     
     private IdentifierType getIdType(String token) {
     	return this.lex.st.find(token).getType();
+    
+    
+    }private int getIdAddress(String token) {
+    	return this.lex.st.find(token).getAddress();
     }
     
     private void setIdType(String token,IdentifierType t) {
-    	this.lex.st.find(token).setType(t);
+    	SymbolTableElement x = this.lex.st.find(token);
+    	x.setType(t);
+    	x.setAddress(this.nextAddress);
+    	this.nextAddress++;
     }
     
     private void showError() {
@@ -772,5 +1053,9 @@ public class Parser {
         }
 
         System.exit(1);
+    }
+    
+    public String getObj() {
+    	return obj;
     }
 }

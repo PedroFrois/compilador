@@ -1,6 +1,10 @@
 package principal;
 
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 import Lexical.LexicalAnalysis;
 import Lexical.LexicalException;
@@ -11,13 +15,16 @@ public class main {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		if (args.length != 1) {
-			System.out.println("Usage: java compiler [Path File]");
+		if (args.length != 2) {
+			System.out.println("Usage: java compiler [Path File] [Path to Obj] ");
 			return;
 		}
 		try {
 			Parser p = new Parser(new LexicalAnalysis(args[0]));
 			p.start();
+			Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(args[1]), "utf-8"));
+			writer.write(p.getObj());
+			writer.close();
 		} catch (IOException | LexicalException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
