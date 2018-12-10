@@ -580,6 +580,7 @@ public class Parser {
     		}
     		switch(t) {
 	    		case STRING:
+	    			obj+="SWAP\n";
 	    			obj+="CONCAT\n";
 	    			break;
 	    		case INT:
